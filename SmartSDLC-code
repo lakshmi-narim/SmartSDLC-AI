@@ -1,0 +1,23 @@
+pip install transformers accelerate gradio
+#command need to run before executing the code.It will install reguirements for the code execution.
+
+import gradio as gr
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import torch
+
+# Load IBM Granite model
+model_id = "ibm-granite/granite-3.3-2b-instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
+
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+def generate_response(prompt):
+    result = pipe(prompt, max_new_tokens=300, do_sample=True)[0]['generated_text']
+    return result
+
+iface = gr.Interface(fn=generate_response, inputs="text", outputs="text",
+                     title="SmartSDLC AI Assistant",
+                     description="Generate SDLC documentation and analysis using IBM Granite model.")
+
+iface.launch()
